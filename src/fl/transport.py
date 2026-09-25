@@ -21,8 +21,9 @@ from __future__ import annotations
 import base64
 import json
 import multiprocessing as mp
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 import numpy as np
 

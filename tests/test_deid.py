@@ -8,6 +8,7 @@ import pytest
 
 from src.deid import detect_pii
 from src.format_shift import TRANSFORMS, perturb
+from src.io_utils import read_jsonl
 from src.spans import Span, render_deidentified, resolve_overlaps
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -132,11 +133,8 @@ def test_render_rejects_overlap() -> None:
 @pytest.mark.parametrize("transform", [*TRANSFORMS, "combined"])
 def test_format_shift_robustness_on_validation(transform: str) -> None:
     """Every synthetic formatting variant must be de-identified exactly."""
-    inputs = [json.loads(l) for l in (ROOT / "data/validation_inputs.jsonl").read_text(encoding="utf-8").splitlines()]
-    truth = {
-        r["case_id"]: r
-        for r in (json.loads(l) for l in (ROOT / "data/validation_ground_truth.jsonl").read_text(encoding="utf-8").splitlines())
-    }
+    inputs = read_jsonl(ROOT / "data/validation_inputs.jsonl")
+    truth = {r["case_id"]: r for r in read_jsonl(ROOT / "data/validation_ground_truth.jsonl")}
     for record in inputs:
         note, spans = perturb(record["note_text"], truth[record["case_id"]]["pii_entities"], transform, seed=3)
         predicted = {(s.start, s.end, s.label) for s in detect_pii(note, record["structured_features"]["age_years"])}

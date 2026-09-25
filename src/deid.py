@@ -34,8 +34,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Iterable
 
 from .spans import Span, resolve_overlaps
 
@@ -70,7 +70,7 @@ _NAME_STOPWORDS = {
     "prof", "summary", "note", "record", "synthetic", "discharge", "berlin", "chennai",
     "hyderabad", "flat", "street", "road", "lane", "avenue", "colony", "hospital", "clinic",
     "department", "ward", "unit", "date", "seen", "responsible", "and", "with", "of", "in",
-    "pt", "reviewed", "consultant", "admitted", "mobile",
+    "pt", "admitted",
 }
 _TITLE_WORDS = {"dr", "prof", "mr", "mrs", "ms", "miss", "mx", "frau", "herr", "smt"}
 

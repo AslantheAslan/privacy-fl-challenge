@@ -22,8 +22,9 @@ Pipeline
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Lexicons. Each entry: (pattern, case_sensitive)
@@ -229,7 +230,8 @@ _HEMOGLOBIN = re.compile(
     rf"(?i:\b(?:ha?emoglobin|hämoglobin|hgb|hb)\b){_LINK}{_NUM}\s*(?P<unit>g/dl|g/l|mmol/l|g%)?"
 )
 _LVEF = re.compile(
-    rf"(?i:\b(?:LVEF|LV-?EF|EF|ejection fraction)\b){_LINK}(\d{{1,2}}(?:[.,]\d)?)(?:\s*(?:-|–|to)\s*(\d{{1,2}}))?\s*(?:%|per ?cent|percent)"
+    rf"(?i:\b(?:LVEF|LV-?EF|EF|ejection fraction)\b){_LINK}(\d{{1,2}}(?:[.,]\d)?)"
+    r"(?:\s*(?:-|–|to)\s*(\d{1,2}))?\s*(?:%|per ?cent|percent)"
 )
 
 

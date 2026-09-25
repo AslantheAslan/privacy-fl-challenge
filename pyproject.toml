@@ -1,0 +1,19 @@
+[project]
+name = "privacy-preserving-clinical-fl"
+version = "1.0.0"
+description = "De-identification, clinical extraction and secure federated readmission modelling (synthetic challenge)"
+requires-python = ">=3.10"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 130
+target-version = "py310"
+extend-exclude = ["src/baseline.py", "evaluator"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+# B905: zip() lengths are guaranteed by construction in this code base.
+ignore = ["B905"]

@@ -108,7 +108,7 @@ class FeatureSpec:
     names: tuple[str, ...]
 
     @classmethod
-    def named(cls, feature_set: str) -> "FeatureSpec":
+    def named(cls, feature_set: str) -> FeatureSpec:
         if feature_set not in FEATURE_SETS:
             raise KeyError(f"unknown feature set {feature_set!r}; choose from {sorted(FEATURE_SETS)}")
         return cls(FEATURE_SETS[feature_set])
@@ -137,7 +137,7 @@ class Standardizer:
     std: np.ndarray
 
     @classmethod
-    def from_moments(cls, count: np.ndarray, total: np.ndarray, total_sq: np.ndarray) -> "Standardizer":
+    def from_moments(cls, count: np.ndarray, total: np.ndarray, total_sq: np.ndarray) -> Standardizer:
         count = np.maximum(np.asarray(count, dtype=float), 1.0)
         mean = total / count
         var = np.maximum(total_sq / count - mean**2, 0.0)
@@ -153,7 +153,7 @@ class Standardizer:
         return np.concatenate([observed.sum(axis=0), filled.sum(axis=0), (filled**2).sum(axis=0)]).astype(float)
 
     @classmethod
-    def from_flat_moments(cls, flat: np.ndarray, dim: int) -> "Standardizer":
+    def from_flat_moments(cls, flat: np.ndarray, dim: int) -> Standardizer:
         return cls.from_moments(flat[:dim], flat[dim : 2 * dim], flat[2 * dim : 3 * dim])
 
     def transform(self, x_raw: np.ndarray) -> np.ndarray:

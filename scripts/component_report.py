@@ -10,7 +10,6 @@ Prints every mismatching entity / field so that rules can be debugged quickly.
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 

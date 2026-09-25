@@ -9,7 +9,6 @@ Rewrites every labelled note (train + validation) with each transform from
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 

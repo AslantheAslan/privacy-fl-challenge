@@ -1,7 +1,8 @@
 """Discrimination and calibration metrics, overall and per site."""
 from __future__ import annotations
 
-from typing import Any, Sequence
+from collections.abc import Sequence
+from typing import Any
 
 import numpy as np
 from sklearn.metrics import average_precision_score, brier_score_loss, log_loss, roc_auc_score

@@ -5,8 +5,9 @@ is what the challenge evaluator expects.
 """
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Iterable
+from typing import Any
 
 PII_LABELS: tuple[str, ...] = (
     "PATIENT_NAME",
@@ -35,7 +36,7 @@ class Span:
         if self.label not in PII_LABELS:
             raise ValueError(f"unsupported PII label {self.label!r}")
 
-    def overlaps(self, other: "Span") -> bool:
+    def overlaps(self, other: Span) -> bool:
         return self.start < other.end and other.start < self.end
 
     def to_json(self) -> dict[str, Any]:

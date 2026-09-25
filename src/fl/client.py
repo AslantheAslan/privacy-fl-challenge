@@ -57,7 +57,7 @@ class HospitalClient:
         self._secagg = SecAggClient(self.client_id, config.threshold) if config.secure else None
 
     @classmethod
-    def from_file(cls, config: ClientConfig) -> "HospitalClient":
+    def from_file(cls, config: ClientConfig) -> HospitalClient:
         """Load only this site's rows from the shared training file."""
         if config.train_path is None:
             raise ValueError("train_path required")
