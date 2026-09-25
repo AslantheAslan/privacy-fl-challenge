@@ -1,93 +1,44 @@
 #!/usr/bin/env python3
-"""Standard challenge entry point using the deliberately simple starter baseline."""
+"""Challenge entry point.
+
+    python run_submission.py \
+      --train data/train.jsonl \
+      --input data/validation_inputs.jsonl \
+      --output outputs/validation_predictions.jsonl \
+      --artifacts-dir outputs/artifacts
+
+Optional flags (not needed by the evaluator):
+  --eval-labels PATH   ground truth for --input; adds holdout metrics to the summary
+  --quick              fewer seeds/repeats for the analysis battery (predictions unchanged)
+  --seed INT           seed of the submitted federated model (default 7)
+"""
 from __future__ import annotations
 
 import argparse
-import json
+import logging
+import sys
 from pathlib import Path
-from typing import Any
 
-import numpy as np
-from sklearn.feature_extraction import DictVectorizer
-from sklearn.linear_model import LogisticRegression
-from sklearn.pipeline import Pipeline
-
-from src.baseline import detect_pii, extract_clinical_data, render_deidentified
+from src.pipeline import configure_logging, run
 
 
-def read_jsonl(path: Path) -> list[dict[str, Any]]:
-    with path.open("r", encoding="utf-8") as handle:
-        return [json.loads(line) for line in handle if line.strip()]
-
-
-def feature_dict(record: dict[str, Any]) -> dict[str, Any]:
-    features = dict(record.get("structured_features", {}))
-    features["hospital_id"] = record.get("hospital_id", "UNKNOWN")
-    return features
-
-
-def train_centralized_baseline(train_records: list[dict[str, Any]]) -> Pipeline:
-    x_train = [feature_dict(record) for record in train_records]
-    y_train = [int(record["labels"]["readmission_30d"]) for record in train_records]
-    model = Pipeline(
-        [
-            ("vectorizer", DictVectorizer(sparse=False)),
-            ("classifier", LogisticRegression(max_iter=1000, class_weight="balanced", random_state=7)),
-        ]
-    )
-    model.fit(x_train, y_train)
-    return model
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser()
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--train", type=Path, required=True)
     parser.add_argument("--input", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--artifacts-dir", type=Path, required=True)
-    args = parser.parse_args()
+    parser.add_argument("--eval-labels", type=Path, default=None)
+    parser.add_argument("--quick", action="store_true")
+    parser.add_argument("--seed", type=int, default=7)
+    args = parser.parse_args(argv)
 
-    train_records = read_jsonl(args.train)
-    evaluation_records = read_jsonl(args.input)
-    model = train_centralized_baseline(train_records)
-    probabilities = model.predict_proba([feature_dict(record) for record in evaluation_records])[:, 1]
-
-    args.output.parent.mkdir(parents=True, exist_ok=True)
-    with args.output.open("w", encoding="utf-8") as handle:
-        for record, probability in zip(evaluation_records, probabilities):
-            spans = detect_pii(record["note_text"])
-            prediction = {
-                "case_id": record["case_id"],
-                "pii_entities": spans,
-                "deidentified_text": render_deidentified(record["note_text"], spans),
-                "extracted_clinical_data": extract_clinical_data(record["note_text"]),
-                "readmission_probability": float(np.clip(probability, 0.0, 1.0)),
-            }
-            handle.write(json.dumps(prediction, ensure_ascii=False) + "\n")
-
-    args.artifacts_dir.mkdir(parents=True, exist_ok=True)
-    experiment_summary = {
-        "implementation": "starter_baseline",
-        "local_models": None,
-        "federated_model": None,
-        "centralized_model": {"implemented": True, "algorithm": "logistic_regression"},
-        "non_iid_analysis": "TODO",
-        "notes": "Replace this starter with local, federated, and centralized experiments.",
-    }
-    (args.artifacts_dir / "experiment_summary.json").write_text(
-        json.dumps(experiment_summary, indent=2), encoding="utf-8"
-    )
-    privacy_summary = {
-        "mechanism": None,
-        "threat_model": "TODO",
-        "privacy_guarantee": "TODO",
-        "utility_analysis": "TODO",
-        "limitations": "TODO",
-    }
-    (args.artifacts_dir / "privacy_summary.json").write_text(
-        json.dumps(privacy_summary, indent=2), encoding="utf-8"
-    )
+    configure_logging()
+    log = logging.getLogger("submission")
+    result = run(args.train, args.input, args.output, args.artifacts_dir, args.eval_labels, args.quick, args.seed)
+    log.info("wrote %d predictions to %s in %.1fs", result["predictions"], args.output, result["timings"]["total_seconds"])
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
