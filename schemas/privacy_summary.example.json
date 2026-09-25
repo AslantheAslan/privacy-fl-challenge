@@ -1,0 +1,12 @@
+{
+  "mechanism": "example_only",
+  "implementation_status": "prototype",
+  "protected_asset": "individual contribution to model updates",
+  "adversary": "honest-but-curious aggregation server",
+  "trust_assumptions": ["At least two non-colluding clients"],
+  "parameters": {},
+  "privacy_claim": "State the exact claim here.",
+  "utility_analysis": {},
+  "runtime_analysis": {},
+  "limitations": ["State what remains unprotected."]
+}

@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/privacy-fl-challenge/prediction.schema.json",
+  "title": "Challenge prediction record",
+  "type": "object",
+  "required": ["case_id", "pii_entities", "deidentified_text", "extracted_clinical_data", "readmission_probability"],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "pii_entities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["start", "end", "label"],
+        "properties": {
+          "start": {"type": "integer", "minimum": 0},
+          "end": {"type": "integer", "minimum": 1},
+          "label": {
+            "enum": [
+              "PATIENT_NAME",
+              "DATE_OF_BIRTH",
+              "ENCOUNTER_DATE",
+              "ADDRESS",
+              "PHONE_NUMBER",
+              "PATIENT_ID",
+              "CLINICIAN_NAME",
+              "EMAIL"
+            ]
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "deidentified_text": {"type": "string"},
+    "extracted_clinical_data": {
+      "type": "object",
+      "required": [
+        "diagnoses",
+        "medications",
+        "heart_rate_bpm",
+        "systolic_bp_mmhg",
+        "creatinine_mg_dl",
+        "hemoglobin_g_dl",
+        "lvef_percent",
+        "smoking_status",
+        "allergy"
+      ],
+      "properties": {
+        "diagnoses": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "atrial_fibrillation",
+              "heart_failure",
+              "hypertension",
+              "type_2_diabetes",
+              "chronic_kidney_disease",
+              "coronary_artery_disease",
+              "acute_coronary_syndrome",
+              "pneumonia",
+              "copd"
+            ]
+          }
+        },
+        "medications": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "apixaban",
+              "rivaroxaban",
+              "warfarin",
+              "metoprolol",
+              "bisoprolol",
+              "furosemide",
+              "ramipril",
+              "amlodipine",
+              "metformin",
+              "insulin",
+              "atorvastatin",
+              "aspirin",
+              "clopidogrel",
+              "amiodarone",
+              "digoxin",
+              "azithromycin"
+            ]
+          }
+        },
+        "heart_rate_bpm": {"type": ["integer", "number", "null"]},
+        "systolic_bp_mmhg": {"type": ["integer", "number", "null"]},
+        "creatinine_mg_dl": {"type": ["number", "null"]},
+        "hemoglobin_g_dl": {"type": ["number", "null"]},
+        "lvef_percent": {"type": ["integer", "number", "null"]},
+        "smoking_status": {"enum": ["never", "former", "current", null]},
+        "allergy": {"enum": ["none", "penicillin", "nsaid", "iodinated_contrast", null]}
+      },
+      "additionalProperties": false
+    },
+    "readmission_probability": {"type": "number", "minimum": 0, "maximum": 1}
+  },
+  "additionalProperties": false
+}

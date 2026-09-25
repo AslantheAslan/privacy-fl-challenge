@@ -1,0 +1,4 @@
+Privacy-Preserving Clinical AI and Federated Learning Take-Home Challenge
+Version: 1.0.0
+Release date: 2026-09-03
+Synthetic data only

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/privacy-fl-challenge/input.schema.json",
+  "title": "Challenge input record",
+  "type": "object",
+  "required": ["case_id", "hospital_id", "note_text", "structured_features"],
+  "properties": {
+    "case_id": {"type": "string", "minLength": 1},
+    "hospital_id": {"enum": ["BERLIN_NODE", "CHENNAI_NODE", "HYDERABAD_NODE"]},
+    "note_text": {"type": "string", "minLength": 1},
+    "structured_features": {
+      "type": "object",
+      "required": ["age_years", "sex", "prior_admissions_12m", "length_of_stay_days", "emergency_admission"],
+      "properties": {
+        "age_years": {"type": "integer", "minimum": 0, "maximum": 120},
+        "sex": {"enum": ["female", "male"]},
+        "prior_admissions_12m": {"type": "integer", "minimum": 0},
+        "length_of_stay_days": {"type": "integer", "minimum": 0},
+        "emergency_admission": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,68 @@
+{
+  "train": {
+    "n": 120,
+    "positive": 41,
+    "by_site": {
+      "BERLIN_NODE": {
+        "n": 42,
+        "positive": 15
+      },
+      "CHENNAI_NODE": {
+        "n": 39,
+        "positive": 17
+      },
+      "HYDERABAD_NODE": {
+        "n": 39,
+        "positive": 9
+      }
+    },
+    "note_length_chars": {
+      "min": 427,
+      "median": 610.0,
+      "max": 810
+    },
+    "pii_entities": {
+      "PATIENT_ID": 120,
+      "PATIENT_NAME": 120,
+      "DATE_OF_BIRTH": 120,
+      "ENCOUNTER_DATE": 120,
+      "PHONE_NUMBER": 120,
+      "ADDRESS": 120,
+      "CLINICIAN_NAME": 181,
+      "EMAIL": 120
+    }
+  },
+  "validation": {
+    "n": 30,
+    "positive": 6,
+    "by_site": {
+      "BERLIN_NODE": {
+        "n": 10,
+        "positive": 3
+      },
+      "CHENNAI_NODE": {
+        "n": 10,
+        "positive": 2
+      },
+      "HYDERABAD_NODE": {
+        "n": 10,
+        "positive": 1
+      }
+    },
+    "note_length_chars": {
+      "min": 439,
+      "median": 606.5,
+      "max": 730
+    },
+    "pii_entities": {
+      "PATIENT_NAME": 30,
+      "DATE_OF_BIRTH": 30,
+      "PATIENT_ID": 30,
+      "ADDRESS": 30,
+      "PHONE_NUMBER": 30,
+      "ENCOUNTER_DATE": 30,
+      "CLINICIAN_NAME": 45,
+      "EMAIL": 30
+    }
+  }
+}

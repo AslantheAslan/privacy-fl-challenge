@@ -1,0 +1,21 @@
+{
+  "implementation": "fedavg",
+  "random_seeds": [7, 19, 43],
+  "features": ["structured_features", "selected_extracted_fields"],
+  "local_models": {
+    "BERLIN_NODE": {"algorithm": "logistic_regression", "validation_roc_auc": 0.71},
+    "CHENNAI_NODE": {"algorithm": "logistic_regression", "validation_roc_auc": 0.69},
+    "HYDERABAD_NODE": {"algorithm": "logistic_regression", "validation_roc_auc": 0.73}
+  },
+  "federated_model": {
+    "algorithm": "FedAvg",
+    "rounds": 20,
+    "local_epochs": 2,
+    "client_weighting": "number_of_training_cases",
+    "validation_roc_auc": 0.76
+  },
+  "centralized_model": {"algorithm": "logistic_regression", "validation_roc_auc": 0.78},
+  "communication": {"client_to_server": "model deltas", "raw_rows_transferred": false},
+  "non_iid_analysis": "Describe observations.",
+  "limitations": ["Describe limitations."]
+}
