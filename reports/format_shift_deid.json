@@ -1,0 +1,97 @@
+{
+  "n_notes": 150,
+  "seed": 13,
+  "results": {
+    "identity": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "dates_iso": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "dates_long": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "dates_us_long": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "dates_two_digit_year": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "ids_alternative_schemes": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "phones_national_formats": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "names_complex": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "names_inverted": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "cues_relabelled": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "layout_single_line": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "combined": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    },
+    "no_age_hint_identity": {
+      "score": 1.0,
+      "char_f1": 1.0,
+      "char_leakage_rate": 0.0,
+      "entity_f1": 1.0,
+      "label_char_f1": 1.0
+    }
+  }
+}

@@ -47,7 +47,15 @@ _LO = "a-zäöüßà-öø-ÿ"
 _NAME_TOKEN = rf"(?:[{_UP}]['’][{_UP}][{_LO}]+|[{_UP}][{_LO}]+(?:[-'’][{_UP}]?[{_LO}]+)*)"
 _PARTICLE = r"(?:van|von|der|den|de|da|del|di|du|le|la|bin|al|el|ter|zu)"
 _NAME = rf"{_NAME_TOKEN}(?: (?:{_PARTICLE} )?{_NAME_TOKEN}){{1,3}}"
-_TITLE = r"(?:Dr|Prof|Mr|Mrs|Ms|Miss|Mx|Frau|Herr|Smt|Shri|Sri)\.?"
+_TITLE = r"(?:Dr|Prof|Mr|Mrs|Ms|Miss|Mx|Frau|Herr|Smt)\.?"
+_TITLES = rf"(?:(?:{_TITLE}|med\.|rer\. nat\.)[ \t]+){{0,3}}"
+_CAPS_TOKEN = rf"[{_UP}]{{2,}}(?:-[{_UP}]{{2,}})?"
+# Person names after an explicit cue may also be inverted ("Neumann, Anton") or
+# carry an upper-case surname ("NEUMANN Anton" / "Anton NEUMANN").
+_PERSON = (
+    rf"(?:{_NAME}|{_CAPS_TOKEN},? {_NAME_TOKEN}(?: {_NAME_TOKEN})?|{_NAME_TOKEN} {_CAPS_TOKEN}"
+    rf"|{_NAME_TOKEN}, {_NAME_TOKEN}(?: {_NAME_TOKEN})?)"
+)
 
 # Capitalised words that may follow a name on the same line and must never be
 # absorbed into it, plus structural words that can never be person names.
@@ -64,7 +72,7 @@ _NAME_STOPWORDS = {
     "department", "ward", "unit", "date", "seen", "responsible", "and", "with", "of", "in",
     "pt", "reviewed", "consultant", "admitted", "mobile",
 }
-_TITLE_WORDS = {"dr", "prof", "mr", "mrs", "ms", "miss", "mx", "frau", "herr", "smt", "shri", "sri"}
+_TITLE_WORDS = {"dr", "prof", "mr", "mrs", "ms", "miss", "mx", "frau", "herr", "smt"}
 
 _MONTHS = (
     r"(?i:jan(?:uary|uar)?|feb(?:ruary|ruar)?|m(?:ar(?:ch)?|ärz|aerz)|apr(?:il)?|ma[yi]|jun[ei]?|"
@@ -79,7 +87,8 @@ _DATE_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(rf"\b{_MONTHS}\.? \d{{1,2}}(?:st|nd|rd|th)?,? {_YEAR4}\b"),
 )
 # Two-digit-year dates are ambiguous with ratios, so they need an explicit cue.
-_SHORT_DATE = re.compile(r"(?<![\d/.-])\d{1,2}[./]\d{1,2}[./]\d{2}(?![\d/.-])")
+_SHORT_DATE = re.compile(r"(?<![\d/.-])\d{1,2}[./]\d{1,2}[./]\d{2}(?![\d/-]|\.\d)")
+_STRICT_SHORT_DATE = re.compile(r"\d{2}([./])\d{2}\1\d{2}")
 
 _DOB_CUE = re.compile(
     r"(?i:\b(?:dob|d\.o\.b\.?|date of birth|birth ?date|born|geb(?:oren|\.)?|birthday)(?![a-z]))"
@@ -95,7 +104,7 @@ _PHONE_INTL = re.compile(r"(?<![\w+])\+\d{1,3}(?:[ .\-/]?\(?\d{1,5}\)?)(?:[ .\-/
 _PHONE_CUE = r"(?i:tel(?:ephone|\.)?|phone|ph|mobile|mob\.?|cell|contact|fon|handy)"
 _PHONE_NATIONAL = re.compile(
     rf"{_PHONE_CUE}\s*(?:(?i:no\.?|number|nr\.?|#))?\s*[:.]?\s*"
-    r"(?P<num>\(?0\d{1,5}\)?(?:[ .\-/]?\d{2,8}){1,4})(?!\d)"
+    r"(?P<num>\(?\d{2,5}\)?(?:[ .\-/]?\d{2,8}){1,4})(?!\d)"
 )
 
 _SITE_ID = re.compile(
@@ -108,7 +117,7 @@ _ID_CUE = re.compile(
 )
 
 _DE_POSTAL = re.compile(rf"(?:D-)?\d{{5}} [{_UP}][{_LO}]+(?:[ -][{_UP}][{_LO}]+)?")
-_IN_POSTAL = re.compile(rf"[{_UP}][{_LO}]+(?: [{_UP}][{_LO}]+)?(?: ?[-–] ?| )\d{{6}}(?!\d)")
+_IN_POSTAL = re.compile(rf"[{_UP}][{_LO}]+(?: [{_UP}][{_LO}]+)?(?: ?[-–] ?| )\d{{3}} ?\d{{3}}(?!\d)")
 _ADDRESS_CUE = re.compile(
     r"(?i:\b(?:address|residence|residential address|home address|home|resides at|lives at|living at|"
     r"anschrift|wohnort|wohnhaft in|from)\b)\s*[:=-]?\s*"
@@ -116,18 +125,19 @@ _ADDRESS_CUE = re.compile(
 _ABBREVIATIONS_WITH_DOT = {"no", "nr", "str", "st", "rd", "ave", "apt", "bldg", "opp", "nagar"}
 
 _PATIENT_CUE = re.compile(
-    rf"(?i:\b(?:patient(?:'s)? name|patientin|patient|full name|name|pt)\b\.?)[ \t]*[:=\-–]?[ \t]*(?:{_TITLE}[ \t]+)?(?P<name>{_NAME})"
+    rf"(?i:\b(?:patient(?:'s)? name|patientin|patient|full name|name|pt)\b\.?)[ \t]*[:=\-–]?[ \t]*{_TITLES}(?P<name>{_PERSON})"
 )
 _CLINICIAN_CUE = re.compile(
     r"(?i:\b(?:attending physician|attending|treating clinician|treating physician|treating doctor|clinician|"
     r"physician|consultant|responsible (?:doctor|physician|clinician)|doctor|electronically signed by|signed by|"
     r"signed|reviewed by|verified by|approved by|author|seen by|examined by|treated by|discharged by|"
     r"dictated by|referring (?:doctor|physician)|referred by|resident|cc)\b)"
-    rf"[ \t]*[:=\-–]?[ \t]*(?:{_TITLE}[ \t]+)?(?P<name>{_NAME})"
+    rf"[ \t]*[:=\-–]?[ \t]*{_TITLES}(?P<name>{_PERSON})"
 )
-_CLINICIAN_TITLE = re.compile(rf"\b(?:Dr|Prof)\.?[ \t]+(?P<name>{_NAME})")
+_CLINICIAN_TITLE = re.compile(rf"\b(?:Dr|Prof)\.?[ \t]+(?:(?:med|Dr|rer\. nat)\.?[ \t]+)*(?P<name>{_PERSON})")
 _STRUCTURAL_PATIENT = re.compile(
-    rf"(?m)(?:^|(?<=\n)|(?<=// ))(?P<name>{_NAME})(?=\s*(?:,\s*(?i:born|dob|geb)|\(\s*(?i:dob)|,\s*\d{{1,3}}\s*y|\s*/\s*[A-Z]{{1,6}}[-/]?\d))"
+    rf"(?<![\w'’.-])(?P<name>{_PERSON})"
+    rf"(?=\s*(?:,\s*(?i:born|dob|d\.o\.b|date of birth|geb)|\(\s*(?i:dob|d\.o\.b)|,\s*\d{{1,3}}\s*y|\s*/\s*[A-Z]{{1,6}}[-/]?\d))"
 )
 
 
@@ -242,7 +252,8 @@ class PiiDetector:
             if any(match.start() < e and s < match.end() for s, e in occupied):
                 continue
             left = note[max(0, match.start() - 25) : match.start()]
-            if (_DOB_CUE.search(left) or _ENC_CUE.search(left)) and _valid_date(match.group(0)):
+            has_cue = bool(_DOB_CUE.search(left) or _ENC_CUE.search(left))
+            if (has_cue or _STRICT_SHORT_DATE.fullmatch(match.group(0))) and _valid_date(match.group(0)):
                 yy = int(match.group(0)[-2:])
                 found.append(_DateCandidate(match.start(), match.end(), 2000 + yy if yy < 40 else 1900 + yy, None))
         found.sort(key=lambda d: d.start)

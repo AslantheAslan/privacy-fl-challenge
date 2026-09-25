@@ -158,6 +158,8 @@ def _is_asserted(clause: str, start: int, end: int, *, drug: bool) -> bool:
     # Only negation cues after the last contrastive conjunction apply.
     conj = list(_CONJUNCTION.finditer(before))
     scope_before = before[conj[-1].end():] if conj else before
+    # NegEx-style window: a pre-trigger only reaches the six preceding tokens.
+    scope_before = " ".join(scope_before.split()[-6:])
     if _PRE_NEGATION.search(scope_before):
         return False
     if _POST_NEGATION.search(after):
@@ -327,14 +329,27 @@ _NO_ALLERGY = re.compile(
 )
 
 
+# "Smoking history not documented" / "no smoking data" mean *unknown*, not never.
+_UNDOCUMENTED = re.compile(
+    r"(?i:not (?:documented|recorded|available|known|assessed)|unknown|no (?:\w+ )?(?:data|information|details)|unavailable)"
+)
+
+# Generic answers inside an explicit smoking field ("Smoking: quit 2019").
+_SMOKING_FALLBACK: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("former", re.compile(r"(?i:\b(?:quit|ex|former|stopped|previous|past)\b)")),
+    ("current", re.compile(r"(?i:\b(?:current|yes|active|daily|pack)\b)")),
+    ("never", re.compile(r"(?i:\b(?:never|none|no|nil|denies)\b)")),
+)
+
+
 def extract_smoking_status(note: str) -> str | None:
     clauses = [c.text for c in split_clauses(note) if re.search(r"(?i:smok|tobacco|cigar|raucher|nicotin)", c.text)]
-    for clause in clauses:
-        if _FAMILY.search(clause):
-            continue
-        for status, pattern in _SMOKING_RULES:
-            if pattern.search(clause):
-                return status
+    clauses = [c for c in clauses if not _FAMILY.search(c) and not _UNDOCUMENTED.search(c)]
+    for rules in (_SMOKING_RULES, _SMOKING_FALLBACK):
+        for clause in clauses:
+            for status, pattern in rules:
+                if pattern.search(clause):
+                    return status
     return None
 
 
