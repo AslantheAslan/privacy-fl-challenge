@@ -1,0 +1,302 @@
+{
+  "mechanism": "Secure aggregation (pairwise + self masking with Shamir-based dropout recovery, Bonawitz et al. 2017, semi-honest variant); record-level DP-GD evaluated as an extension",
+  "implementation_status": {
+    "secure_aggregation": "implemented from first principles (src/privacy/crypto.py, secagg.py); ON for the submitted model and for federated standardisation",
+    "differential_privacy": "implemented (src/privacy/dp.py) with exact GDP and RDP accounting; evaluated over a range of epsilons; OFF for the submitted model (utility trade-off below)",
+    "maturity": "research prototype: correct and tested, but not audited, not constant-time"
+  },
+  "federated_learning_is_not_a_privacy_guarantee": "FedAvg alone only keeps raw rows on site. The model updates it exchanges are deterministic functions of patient data and can leak them (gradient inversion, membership inference, property inference). Secure aggregation removes access to *individual hospitals'* updates but still reveals their sum and the final model; only differential privacy gives a formal, quantifiable bound on what any output reveals about one patient.",
+  "protected_asset": {
+    "secure_aggregation": "each hospital's per-round model (n_k * theta_k), its sample size n_k, its local loss and its feature moments (count/sum/sum-of-squares) used for standardisation",
+    "differential_privacy": "whether any single patient record was part of a hospital's training data (add/remove-one-record adjacency, per hospital)"
+  },
+  "adversary": {
+    "in_scope": [
+      "honest-but-curious aggregation server that follows the protocol but inspects everything it sees",
+      "server colluding with at most t-1 = 1 hospital",
+      "passive network eavesdropper (shares are AEAD-encrypted end-to-end between hospitals)",
+      "for DP: any party observing messages, the final model or its predictions (post-processing)"
+    ],
+    "out_of_scope": [
+      "actively malicious server (key substitution, inconsistent dropout claims to different clients) — needs PKI signatures and the consistency round of the malicious-secure protocol",
+      "malicious hospitals sending poisoned updates (secure aggregation makes poisoning harder to detect)",
+      "compromised hospital infrastructure, side channels (timing, memory)"
+    ]
+  },
+  "trust_assumptions": [
+    "at least t = 2 of n = 3 hospitals complete each round (threshold t = 2)",
+    "public keys are authentic (in deployment: certificates/PKI; here the relaying server is trusted to forward keys unmodified — the semi-honest assumption)",
+    "discrete-log / CDH hardness in the RFC 3526 2048-bit MODP group (~112-bit security)",
+    "SHAKE-256 behaves as a PRG / random oracle; OS CSPRNG (secrets) for keys and seeds",
+    "for DP: n_k treated as public; clipping bound enforced by the hospital's own code"
+  ],
+  "parameters": {
+    "secure_aggregation": {
+      "clients": 3,
+      "threshold": 2,
+      "key_agreement": "finite-field DH, RFC 3526 group 14 (2048-bit safe prime), 256-bit private exponents, subgroup check on every public key, SHA-256 KDF with domain separation",
+      "share_encryption": "encrypt-then-MAC: SHAKE-256 keystream, HMAC-SHA256 tag, 128-bit random nonce",
+      "masking_ring": "Z_2^64 (uint64 wrap-around)",
+      "fixed_point": "24 fractional bits (resolution 6.0e-08), overflow-checked with 8 bits of head-room for the sum",
+      "prg": "SHAKE-256 with per-round and per-purpose domain separation (masks never reused)",
+      "secret_sharing": "Shamir over GF(2^521 - 1)",
+      "rekeying": "a hospital whose mask key was reconstructed after dropping out is excluded from later rounds"
+    },
+    "differential_privacy": {
+      "mechanism": "local full-batch DP-GD: per-example clipping + Gaussian noise on the summed gradient",
+      "clip_norm": 1.0,
+      "delta": 0.001,
+      "rounds": 30,
+      "local_epochs": 1,
+      "steps_per_record": 30,
+      "accounting": "exact: T Gaussian steps compose to mu-GDP with mu = sqrt(T)/sigma (no subsampling), converted exactly to (epsilon, delta); RDP bound reported as a cross-check"
+    }
+  },
+  "privacy_claim": "Secure aggregation: in every aggregation round, the view of a semi-honest server — even jointly with any one hospital — can be simulated from the sum of the remaining hospitals' vectors alone. The server therefore learns sum_k n_k*theta_k and sum_k n_k (hence the global model), the pooled feature moments and the pooled training loss, but no individual hospital's model, statistics or sample size. Differential privacy (when enabled): for every patient record, the joint distribution of everything its hospital ever sends — and hence of the final model and all predictions — is (epsilon, delta)-indistinguishable from the case where that record is absent, with epsilon as reported below for delta = 1e-3.",
+  "what_is_not_guaranteed": [
+    "The aggregate itself is revealed: with three hospitals, the server plus one hospital learns the sum of the other two; two colluding hospitals plus the server learn the third's update exactly.",
+    "Without DP, the global model and predictions can leak information about individual patients (membership/attribute inference); secure aggregation offers no protection here.",
+    "Every hospital receives the global model each round and can difference it against its own update.",
+    "No protection against a malicious server or poisoned updates (see adversary.out_of_scope).",
+    "De-identification is rule-based; residual quasi-identifiers (age, rare diagnosis combinations) remain in de-identified text, and recall on unseen formats is empirical, not guaranteed."
+  ],
+  "empirical_utility_and_cost": {
+    "secure_aggregation": {
+      "max_abs_parameter_difference_vs_plaintext_fedavg": 6.681458997181977e-10,
+      "runtime_seconds": {
+        "plain": 0.03814030500006993,
+        "secure": 0.4253968900002292
+      },
+      "client_to_server_bytes": {
+        "plain": {
+          "BERLIN_NODE": 14127,
+          "CHENNAI_NODE": 14128,
+          "HYDERABAD_NODE": 14130
+        },
+        "secure": {
+          "BERLIN_NODE": 105014,
+          "CHENNAI_NODE": 104985,
+          "HYDERABAD_NODE": 105025
+        }
+      },
+      "dropout_test": {
+        "dropped_client": "HYDERABAD_NODE",
+        "dropout_round": 30,
+        "completed_rounds": 60,
+        "participants_after_dropout": [
+          0,
+          1
+        ],
+        "final_objective_on_surviving_nodes": 0.48488790679861
+      },
+      "submitted_model_training": {
+        "backend": "process (one OS process per hospital node; each loads only its own rows)",
+        "seconds": 3.637
+      },
+      "interpretation": "Lossless: identical model up to fixed-point rounding. Cost is dominated by one-time 2048-bit DH operations; per-round overhead is a few milliseconds and ~7x bytes."
+    },
+    "differential_privacy": {
+      "table": {
+        "epsilon_0.5": {
+          "target_epsilon": 0.5,
+          "noise_multiplier": 25.25071071598867,
+          "epsilon_exact_gdp": 0.49999999999999944,
+          "epsilon_rdp_bound": 0.5839429545703061,
+          "cv_roc_auc": {
+            "mean": 0.6709889883708965,
+            "std": 0.07747542099070225,
+            "min": 0.624266748996604,
+            "max": 0.7604198826798395
+          },
+          "cv_brier": {
+            "mean": 0.24063049170059247,
+            "std": 0.020522474320551678,
+            "min": 0.22292522628127098,
+            "max": 0.2631236755193997
+          },
+          "holdout_roc_auc": {
+            "mean": 0.6819444444444444,
+            "std": 0.12685734308201144,
+            "min": 0.47916666666666663,
+            "max": 0.8194444444444444
+          },
+          "holdout_brier": {
+            "mean": 0.19208511027081226,
+            "std": 0.055699178650884654,
+            "min": 0.12125816966941397,
+            "max": 0.2582205921250229
+          }
+        },
+        "epsilon_1": {
+          "target_epsilon": 1.0,
+          "noise_multiplier": 14.101977269465964,
+          "epsilon_exact_gdp": 0.9999999999999991,
+          "epsilon_rdp_bound": 1.1498019908378843,
+          "cv_roc_auc": {
+            "mean": 0.7466296181949161,
+            "std": 0.038164138751842026,
+            "min": 0.7171966656375425,
+            "max": 0.7897499228156838
+          },
+          "cv_brier": {
+            "mean": 0.18971632323885365,
+            "std": 0.012089385325841338,
+            "min": 0.17992987947677613,
+            "max": 0.2032305877729268
+          },
+          "holdout_roc_auc": {
+            "mean": 0.7208333333333332,
+            "std": 0.08396749444551026,
+            "min": 0.5833333333333333,
+            "max": 0.8055555555555556
+          },
+          "holdout_brier": {
+            "mean": 0.15825562567482862,
+            "std": 0.03786833177543866,
+            "min": 0.09900936527102254,
+            "max": 0.19521720108108345
+          }
+        },
+        "epsilon_2": {
+          "target_epsilon": 2.0,
+          "noise_multiplier": 7.915900894310811,
+          "epsilon_exact_gdp": 2.0,
+          "epsilon_rdp_bound": 2.2708569226217223,
+          "cv_roc_auc": {
+            "mean": 0.7996295152824945,
+            "std": 0.01412114433594223,
+            "min": 0.7835751775239271,
+            "max": 0.8101265822784809
+          },
+          "cv_brier": {
+            "mean": 0.16268270983564231,
+            "std": 0.005995660631291185,
+            "min": 0.15620409984837882,
+            "max": 0.1680359343831626
+          },
+          "holdout_roc_auc": {
+            "mean": 0.7527777777777777,
+            "std": 0.04037344959374619,
+            "min": 0.701388888888889,
+            "max": 0.8125
+          },
+          "holdout_brier": {
+            "mean": 0.14520341985022583,
+            "std": 0.025612222461255236,
+            "min": 0.10224295189290718,
+            "max": 0.166863491953654
+          }
+        },
+        "epsilon_4": {
+          "target_epsilon": 4.0,
+          "noise_multiplier": 4.508182147876382,
+          "epsilon_exact_gdp": 3.999999999999997,
+          "epsilon_rdp_bound": 4.488838435711267,
+          "cv_roc_auc": {
+            "mean": 0.8267983945662242,
+            "std": 0.006197857332474446,
+            "min": 0.8209323865390553,
+            "max": 0.8332818771225687
+          },
+          "cv_brier": {
+            "mean": 0.1479521858915416,
+            "std": 0.00438862948610865,
+            "min": 0.1443788931942494,
+            "max": 0.1528507051876184
+          },
+          "holdout_roc_auc": {
+            "mean": 0.7388888888888888,
+            "std": 0.0257974661402871,
+            "min": 0.7152777777777778,
+            "max": 0.7777777777777778
+          },
+          "holdout_brier": {
+            "mean": 0.13951025626670796,
+            "std": 0.016024126804078456,
+            "min": 0.11195488637980017,
+            "max": 0.15238928008617808
+          }
+        },
+        "epsilon_8": {
+          "target_epsilon": 8.0,
+          "noise_multiplier": 2.6291436014605774,
+          "epsilon_exact_gdp": 8.0,
+          "epsilon_rdp_bound": 8.872617546340217,
+          "cv_roc_auc": {
+            "mean": 0.8309148914273953,
+            "std": 0.004990987198922414,
+            "min": 0.8280333436245755,
+            "max": 0.836677987033035
+          },
+          "cv_brier": {
+            "mean": 0.1440304499572457,
+            "std": 0.003340831276154197,
+            "min": 0.14101427341845266,
+            "max": 0.14762136393487033
+          },
+          "holdout_roc_auc": {
+            "mean": 0.7402777777777777,
+            "std": 0.01743041721945993,
+            "min": 0.7152777777777778,
+            "max": 0.763888888888889
+          },
+          "holdout_brier": {
+            "mean": 0.13647729312821466,
+            "std": 0.009700735068022812,
+            "min": 0.1196472622460547,
+            "max": 0.14416668176599004
+          }
+        },
+        "non_private": {
+          "target_epsilon": null,
+          "noise_multiplier": null,
+          "epsilon_exact_gdp": null,
+          "epsilon_rdp_bound": null,
+          "cv_roc_auc": {
+            "mean": 0.8448080683338479,
+            "std": 0.0017555544004560688,
+            "min": 0.8428527323247916,
+            "max": 0.8462488422352578
+          },
+          "cv_brier": {
+            "mean": 0.14369360659578498,
+            "std": 0.001339986355839165,
+            "min": 0.14257639174149508,
+            "max": 0.14517927209060996
+          },
+          "holdout_roc_auc": {
+            "mean": 0.763888888888889,
+            "std": 0.0,
+            "min": 0.763888888888889,
+            "max": 0.763888888888889
+          },
+          "holdout_brier": {
+            "mean": 0.1256867030701066,
+            "std": 7.248340142742977e-05,
+            "min": 0.12561016534512298,
+            "max": 0.1257998873704301
+          }
+        }
+      },
+      "interpretation": "Utility degrades gracefully down to epsilon ~ 4 and sharply below epsilon ~ 2: with only ~40 records per hospital the Gaussian noise on the summed gradient is large relative to the signal. The submitted model therefore uses secure aggregation without DP; a deployment that needs a formal patient-level bound should run with epsilon in [4, 8], ideally with more data per site."
+    }
+  },
+  "remaining_attack_surface": [
+    "membership / attribute inference against the released global model and predictions (mitigated only with DP enabled)",
+    "server lying about dropouts to different clients (malicious setting) — would require signed, consistency-checked dropout lists",
+    "model poisoning / backdoors by a hospital (secure aggregation hides individual updates from robust aggregation rules)",
+    "traffic analysis: participation and timing reveal which hospital dropped; message sizes are constant",
+    "prototype cryptography in pure Python (non-constant-time big-integer arithmetic)",
+    "residual PII in de-identified notes if a hidden format defeats the detector"
+  ],
+  "limitations": [
+    "Semi-honest security only; authentication of public keys is assumed, not implemented.",
+    "Federation simulated on one host (separate processes and serialised messages, no real network).",
+    "DP accounting treats n_k as public and assumes per-example clipping is enforced correctly on-site."
+  ],
+  "configuration_reference": {
+    "rounds": 60,
+    "local_epochs": 2,
+    "l2": 0.05
+  }
+}

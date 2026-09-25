@@ -134,6 +134,7 @@ def run(
         "seed_stability": ex.seed_stability(train, cfg, tuple(range(5 if quick else 10)), labelled_holdout),
         "convergence": ex.convergence_study(train, cfg, epochs_grid=(1, 2, 5) if quick else (1, 2, 5, 10)),
         "non_iid": ex.non_iid_profile(train, cfg),
+        "personalisation": ex.personalisation_study(train, cfg),
         "secure_aggregation": ex.secure_aggregation_benchmark(train, cfg),
         "dp": ex.dp_study(train, cfg, DP_EPSILONS, DP_DELTA, holdout=labelled_holdout),
     }
@@ -246,6 +247,11 @@ def build_experiment_summary(cfg, l2_selection, final, results, timings, seed, e
             **results["convergence"],
         },
         "non_iid_profile": results["non_iid"],
+        "personalisation_study": {
+            k: {"cv_roc_auc": v["overall"]["roc_auc"], "cv_log_loss": v["overall"]["log_loss"],
+                "cv_by_site_roc_auc": {s: v[s]["roc_auc"] for s in v if s.endswith("_NODE")}}
+            for k, v in results["personalisation"]["results"].items()
+        },
         "communication": {
             "what_leaves_each_client": [
                 "one-time: 2 Diffie-Hellman public keys (2048-bit) and AEAD-encrypted Shamir shares of its mask key",
@@ -302,6 +308,11 @@ def _non_iid_observations(results: dict[str, Any]) -> list[str]:
         f"{drift}; E=2 balances communication and drift for this data size.",
         "Calibration: local models are worse calibrated (higher CV log-loss/Brier) because a ~40-row site "
         "estimates its intercept and coefficients with high variance.",
+        "Coverage skew: BERLIN_NODE has no chronic-kidney-disease case and a single prior admission in training, "
+        "so a Berlin-only model cannot learn two of the strongest risk factors; the federated model can.",
+        "Personalisation (FedAvg + local fine-tuning) did not improve CV discrimination or calibration here "
+        "(see personalisation_study): the site indicator already captures site baselines and ~32 rows per fold "
+        "mostly add variance.",
     ]
 
 

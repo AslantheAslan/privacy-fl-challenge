@@ -1,3 +1,7 @@
-numpy>=2.0,<3
-scikit-learn>=1.5,<2
-pytest>=8,<10
+# Runtime + test dependencies (pinned for reproducibility; tested with Python 3.11).
+# The solution itself only needs NumPy and scikit-learn (metrics); all cryptography
+# uses the Python standard library, so no model weights or native crypto libraries
+# are downloaded at build or run time.
+numpy==2.4.4
+scikit-learn==1.8.0
+pytest==9.1.1

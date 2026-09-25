@@ -331,6 +331,32 @@ def select_l2(train: list[Record], cfg: ExperimentConfig, grid: tuple[float, ...
     return {"criterion": "federated site-stratified CV log-loss", "grid": scores, "selected_l2": float(best)}
 
 
+def personalisation_study(train: list[Record], cfg: ExperimentConfig, epochs_grid: tuple[int, ...] = (0, 2, 5)) -> dict:
+    """FedAvg followed by E epochs of purely local fine-tuning at each site (personalised FL)."""
+    y = np.array([label(r) for r in train])
+    sites = [r["hospital_id"] for r in train]
+    results = {}
+    for epochs in epochs_grid:
+        per_repeat = []
+        for repeat in range(cfg.cv_repeats):
+            folds = np.array(_stratified_site_folds(train, cfg.cv_folds, seed=1000 + repeat))
+            oof = np.zeros(len(train))
+            for fold in range(cfg.cv_folds):
+                by_site = partition_by_site([r for r, f in zip(train, folds) if f != fold])
+                fed = train_federated(by_site, cfg, seed=repeat)
+                for site, rows in by_site.items():
+                    theta = fed["theta"]
+                    if epochs:
+                        x = fed["scaler"].transform(cfg.spec.matrix(rows))
+                        theta = local_sgd(theta, x, np.array([label(r) for r in rows]), epochs, cfg.sgd,
+                                          np.random.default_rng([repeat, site_index(site)]))
+                    idx = [i for i, (r, f) in enumerate(zip(train, folds)) if f == fold and r["hospital_id"] == site]
+                    oof[idx] = predict(theta, fed["scaler"], cfg.spec, [train[i] for i in idx])
+            per_repeat.append(metrics_by_site(y, oof, sites))
+        results[f"finetune_epochs_{epochs}"] = _summarize_metric_list(per_repeat)
+    return {"design": "site-stratified CV; epochs=0 is plain FedAvg", "results": results}
+
+
 def non_iid_profile(train: list[Record], cfg: ExperimentConfig) -> dict[str, Any]:
     spec = FeatureSpec.named("extended")
     profile = {}

@@ -1,0 +1,206 @@
+{
+  "n_cases": 30,
+  "missing_prediction_case_ids": [],
+  "extra_prediction_case_ids": [],
+  "validation_messages": [],
+  "metrics": {
+    "deidentification": {
+      "score": 1.0,
+      "character_detection": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp_chars": 4660,
+        "fp_chars": 0,
+        "fn_chars": 0,
+        "leakage_rate": 0.0,
+        "false_discovery_rate": 0.0
+      },
+      "label_aware_character": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "exact_entity": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 255,
+        "fp": 0,
+        "fn": 0,
+        "macro_f1": 1.0,
+        "per_label": {
+          "PATIENT_NAME": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 30,
+            "fp": 0,
+            "fn": 0
+          },
+          "DATE_OF_BIRTH": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 30,
+            "fp": 0,
+            "fn": 0
+          },
+          "ENCOUNTER_DATE": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 30,
+            "fp": 0,
+            "fn": 0
+          },
+          "ADDRESS": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 30,
+            "fp": 0,
+            "fn": 0
+          },
+          "PHONE_NUMBER": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 30,
+            "fp": 0,
+            "fn": 0
+          },
+          "PATIENT_ID": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 30,
+            "fp": 0,
+            "fn": 0
+          },
+          "CLINICIAN_NAME": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 45,
+            "fp": 0,
+            "fn": 0
+          },
+          "EMAIL": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 30,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "deidentified_text_render_exact_rate": 1.0
+    },
+    "structured_extraction": {
+      "score": 1.0,
+      "diagnoses": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 52,
+        "fp": 0,
+        "fn": 0
+      },
+      "medications": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 59,
+        "fp": 0,
+        "fn": 0
+      },
+      "numeric": {
+        "heart_rate_bpm": {
+          "score": 1.0,
+          "within_tolerance_rate": 1.0,
+          "mean_absolute_error_nonmissing_pairs": 0.0,
+          "tolerance": 3.0
+        },
+        "systolic_bp_mmhg": {
+          "score": 1.0,
+          "within_tolerance_rate": 1.0,
+          "mean_absolute_error_nonmissing_pairs": 0.0,
+          "tolerance": 5.0
+        },
+        "creatinine_mg_dl": {
+          "score": 1.0,
+          "within_tolerance_rate": 1.0,
+          "mean_absolute_error_nonmissing_pairs": 0.0,
+          "tolerance": 0.1
+        },
+        "hemoglobin_g_dl": {
+          "score": 1.0,
+          "within_tolerance_rate": 1.0,
+          "mean_absolute_error_nonmissing_pairs": 0.0,
+          "tolerance": 0.3
+        },
+        "lvef_percent": {
+          "score": 1.0,
+          "within_tolerance_rate": 1.0,
+          "mean_absolute_error_nonmissing_pairs": 0.0,
+          "tolerance": 3.0
+        }
+      },
+      "categorical": {
+        "smoking_status": {
+          "accuracy": 1.0,
+          "correct": 30,
+          "n": 30
+        },
+        "allergy": {
+          "accuracy": 1.0,
+          "correct": 30,
+          "n": 30
+        }
+      },
+      "numeric_average": 1.0,
+      "categorical_average": 1.0
+    },
+    "readmission_prediction": {
+      "score": 0.7441197112930253,
+      "roc_auc": 0.7569444444444444,
+      "average_precision": 0.6098901098901098,
+      "brier_score": 0.12336130311973327,
+      "log_loss": 0.4030362680325289,
+      "prevalence": 0.2,
+      "by_site": {
+        "BERLIN_NODE": {
+          "n": 10,
+          "prevalence": 0.3,
+          "roc_auc": 0.7142857142857143,
+          "average_precision": 0.5317460317460317,
+          "brier_score": 0.16443909335550155
+        },
+        "CHENNAI_NODE": {
+          "n": 10,
+          "prevalence": 0.2,
+          "roc_auc": 1.0,
+          "average_precision": 1.0,
+          "brier_score": 0.020321371002810153
+        },
+        "HYDERABAD_NODE": {
+          "n": 10,
+          "prevalence": 0.1,
+          "roc_auc": 0.2222222222222222,
+          "average_precision": 0.125,
+          "brier_score": 0.1853234450008881
+        }
+      },
+      "worst_site_roc_auc": 0.2222222222222222
+    },
+    "automated_composite_0_to_1": 0.9360299278232563,
+    "automated_points": {
+      "deidentification": 15.0,
+      "structured_extraction": 15.0,
+      "readmission_prediction": 7.441197112930253,
+      "total_out_of_40": 37.441197112930254
+    }
+  }
+}
