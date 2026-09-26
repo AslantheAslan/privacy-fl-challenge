@@ -1,6 +1,5 @@
 # Privacy-Preserving Clinical AI & Cross-Silo Federated Learning
 
-Solution to the synthetic take-home challenge (brief: [`docs/CHALLENGE_README.md`](docs/CHALLENGE_README.md)).
 Three hospital nodes — `BERLIN_NODE`, `CHENNAI_NODE`, `HYDERABAD_NODE` — de-identify and structure their
 clinical notes locally, then train a 30-day readmission model together with **FedAvg over secure aggregation**,
 without any patient row leaving its node.
