@@ -53,7 +53,7 @@ python evaluator/evaluate.py --inputs data/validation_inputs.jsonl --ground-trut
 python scripts/format_shift_eval.py --output reports/format_shift_deid.json
 
 # make stress:
-python scripts/format_shift_eval.py --verbose
+python scripts/format_shift_eval.py --verbose 
 
 ```
 
