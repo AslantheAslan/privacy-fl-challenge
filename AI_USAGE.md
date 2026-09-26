@@ -39,9 +39,3 @@ Claude was used as an implementation partner for most of the repository. Concret
   byte-for-byte. The Docker image could not be built in the sandbox (no Docker daemon) and is untested there.
 * A wrong semantic expectation in one of Claude's own extraction tests (`"No smoking data"` → `never`) was
   found on review and corrected to `null`, with the extractor changed accordingly.
-
-## Author's own review — to be completed by the submitting candidate
-
-> Before submission, describe here in your own words what you personally reviewed, re-derived, changed or
-> rejected (for example: re-checking the secure-aggregation security argument, re-running the experiments,
-> editing REPORT.md, rebuilding the Docker image), and which parts you designed yourself. Delete this note.
