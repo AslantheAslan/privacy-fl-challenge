@@ -34,6 +34,29 @@ make report       # regenerate reports/ (adds holdout metrics via --eval-labels)
 make stress       # de-identification under 10 synthetic formatting shifts
 ```
 
+On Windows, without the make command:
+
+```bash
+# make evaluate:
+python evaluator/evaluate.py --inputs data/validation_inputs.jsonl --ground-truth data/validation_ground_truth.jsonl --predictions outputs/validation_predictions.jsonl --report outputs/validation_report.json
+
+# make test:
+python -m pytest
+
+# make lint:
+python -m pip install ruff
+python -m ruff check .
+
+# make report:
+python run_submission.py --train data/train.jsonl --input data/validation_inputs.jsonl --output reports/validation_run/validation_predictions.jsonl --artifacts-dir reports/validation_run --eval-labels data/validation_ground_truth.jsonl
+python evaluator/evaluate.py --inputs data/validation_inputs.jsonl --ground-truth data/validation_ground_truth.jsonl --predictions reports/validation_run/validation_predictions.jsonl --report reports/validation_run/validation_report.json
+python scripts/format_shift_eval.py --output reports/format_shift_deid.json
+
+# make stress:
+python scripts/format_shift_eval.py --verbose
+
+```
+
 Optional flags: `--eval-labels <ground_truth.jsonl>` adds holdout metrics to `experiment_summary.json`;
 `--quick` shortens the analysis battery (predictions are unchanged); `--seed` sets the submitted model's seed.
 
